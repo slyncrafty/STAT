@@ -1,0 +1,102 @@
+---
+title: "Predicting Wine Quality using physio-chemical attributes"
+subtitle: "STAT 420 Group Data Project Proposal"
+author: "Team AMB - Adriane Yi (adriane3), Baolong Truong (baolong3), Monika Janas (janas3)"
+date: '2023-07-19'
+output:
+  html_document: 
+    theme: readable
+    toc: yes
+  pdf_document: default
+urlcolor: cyan
+---
+
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+options(scipen = 1, digits = 4, width = 80, fig.align = "center")
+```
+
+### Introduction
+
+For our project, we will be applying linear regression to predict wine quality based on various physio-chemical attributes. The dataset we are using is from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/186/wine+quality). The dataset contains 5320 instances and 12 attributes, detailing red and white vinho verde wine samples from the northern region of Portugal. The primary objective of collecting this dataset was to build a model that predicts wine quality based on various physio-chemical tests conducted on the wines. The dataset is split into two csv files for red and white wines, though we will combine these into one dataset and use wine type as a 13th, categorical variable. 
+
+Our goal is to explore how effective regression algorithms are at predicting the quality of wine based on the provided variables, and which physio-chemical attributes contribute most to the quality of a wine, and if there is a difference in contributing attributes between red and white wines.
+
+Citation:
+
+P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. Modeling wine preferences by data mining from physicochemical properties. In Decision Support Systems, Elsevier, 47(4):547-553, 2009. [Source Link](http://www3.dsi.uminho.pt/pcortez/wine/)
+
+***
+
+### Dataset in R
+
+We read in the data from the two csv files and combine them into a single dataframe.
+
+```{r, message=FALSE}
+library(readr)
+library(knitr)
+library(dplyr)
+library(tibble)
+
+red = read.csv("winequality-red.csv", sep = ";")
+red$type = "Red"
+white = read.csv("winequality-white.csv", sep = ";")
+white$type = "White"
+winequality = bind_rows(red, white)
+```
+
+Next, we convert `Type` to be a factor variable and clean up the data by removing rows with null values and ensure each row is unique (no duplicates).
+
+```{r}
+winequality$type = as.factor(winequality$type)
+winequality = na.omit(winequality)
+winequality = unique(winequality)
+```
+
+***
+
+Now we can display the dataset directly.
+
+```{r, echo=FALSE}
+n = length(colnames(winequality))
+vars = colnames(winequality)
+nums = seq(1,n)
+data_types = unname(sapply(winequality, class))
+
+vars = c("type",
+         "fixed acidity",
+         "volatile acidity", 
+         "citric acid",
+         "residual sugar",
+         "chlorides",
+         "free sulfur dioxide",
+         "total sulfur dioxide",
+         "density",
+         "pH",
+         "sulphates",
+         "alcohol",
+         "quality"
+              )
+descriptions = c("red(0) or white(1)",
+                 "(g(tartaric acid)/dm3)",
+                 "(g(acetic acid)/dm3)",
+                 "(g/dm3)",
+                 "(g/dm3)",
+                 "(g(sodium chloride)/dm3)",
+                 "(mg/dm3)",
+                 "(mg/dm3)",
+                 "(g/cm3)",
+                 "quantitative measure of the acidity or basicity",
+                 "(g(potassium sulphate)/dm3)",
+                 "alcohol (% vol.)",
+                 "Preference"
+                 )
+
+kable(data.frame(N = nums, Variables=vars, Type=data_types, Description=descriptions))
+```
+
+```{r}
+tibble(winequality)
+str(winequality)
+```
+
+***
